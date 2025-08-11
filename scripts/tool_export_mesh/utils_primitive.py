@@ -299,7 +299,7 @@ class Primitive():
         # Gather UV data
         _temp_arr = np.empty(len(self.blender_mesh.loops) * 2, dtype = np.float32)
         self.uv_layer.data.foreach_get('uv', _temp_arr)
-        uvs = np.round(_temp_arr, 3).reshape(-1, 2).T
+        uvs = _temp_arr.reshape(-1, 2).T
         # u, v -> u, 1-v
         uvs[1] = 1 - uvs[1]
         self.atomic_vertices['uv_x'] = uvs[0]
@@ -310,7 +310,7 @@ class Primitive():
         if self.options.secondary_uv_layer_index != -1 and self.second_uv_layer:
             _temp_arr = np.empty(len(self.blender_mesh.loops) * 2, dtype = np.float32)
             self.second_uv_layer.data.foreach_get('uv', _temp_arr)
-            uvs = np.round(_temp_arr, 3).reshape(-1, 2).T
+            uvs = _temp_arr.reshape(-1, 2).T
             # u, v -> u, 1-v
             uvs[1] = 1 - uvs[1]
             self.atomic_vertices['uv_x_2'] = uvs[0]
