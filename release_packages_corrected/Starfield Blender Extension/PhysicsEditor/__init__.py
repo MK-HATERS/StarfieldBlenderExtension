@@ -1,0 +1,44 @@
+import bpy
+import os
+import sys
+
+dir = os.path.dirname(os.path.realpath(__file__))
+if dir not in sys.path:
+	sys.path.append(dir)
+
+from submodule_version import __plugin_version__, Version
+
+import PhysicsEditor.Utilities.utils_node as utils_node
+
+import PhysicsEditor.AttrOperator as AttrOperator
+import PhysicsEditor.PhysicsTree as PhysicsTree
+
+import PhysicsEditor.ActivateVisOperator as ActivateVisOperator
+
+bl_info = {
+	"name": "Starfield Blender Extension - Physics Editor",
+	"author": "SesamePaste",
+	"version": (1, 6, 0),
+	"blender": (5, 0, 0),
+	"location": "File > Import-Export",
+	"description": "Export havok physics data for starfield. Requires \"Starfield Blender Extension\" of the same version installed.",
+	"warning": "",
+	"category": "Import-Export",
+	}
+
+__plugin_version__ = Version(bl_info['version'])
+
+def register():
+	bpy.types.Scene.sf_physics_editor_version = bpy.props.StringProperty(
+		name="__sf_physics_editor_version__",
+		default = f"{bl_info['version'][0]}.{bl_info['version'][1]}.{bl_info['version'][2]}",
+	)
+	AttrOperator.register()
+	PhysicsTree.register()
+	ActivateVisOperator.register()
+
+def unregister():
+	ActivateVisOperator.unregister()
+	AttrOperator.unregister()
+	PhysicsTree.unregister()
+	del bpy.types.Scene.sf_physics_editor_version
