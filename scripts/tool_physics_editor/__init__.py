@@ -16,12 +16,12 @@ import PhysicsEditor.PhysicsTree as PhysicsTree
 import PhysicsEditor.ActivateVisOperator as ActivateVisOperator
 
 bl_info = {
-	"name": "Starfield Havok Physics Editor -port-5.x",
+	"name": "Starfield Blender Extension - Physics Editor",
 	"author": "SesamePaste",
 	"version": (1, 6, 0),
 	"blender": (5, 0, 0),
 	"location": "File > Import-Export",
-	"description": "Export havok physics data for starfield. Requires \"Starfield Geometry Bridge\" of the same version installed.",
+	"description": "Export havok physics data for starfield. Requires \"Starfield Blender Extension\" of the same version installed.",
 	"warning": "",
 	"category": "Import-Export",
 	}

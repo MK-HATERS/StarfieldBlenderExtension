@@ -21,7 +21,7 @@ import MorphIOOperators
 import MeshIOOperators
 
 bl_info = {
-	"name": "Starfield Geometry Bridge -port-5.x",
+	"name": "Starfield Blender Extension",
 	"author": "SesamePaste & Deveris",
 	"version": (1, 6, 0),
 	"blender": (5, 0, 0),
