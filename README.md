@@ -1,5 +1,5 @@
 # MeshConverter
-A blender plugin that exports models, morph, geometry and physics data for Starfield in a single click. This plugin is designed to work with blender version 3.5 or 3.6, imcompatible with blender 4.0+.
+A blender plugin that exports models, morph, geometry and physics data for Starfield in a single click. This plugin is designed to work with blender version 5.0+.
 
 ## Discord Community
 * https://discord.gg/TZ2Fvb7EQg (permanant access)

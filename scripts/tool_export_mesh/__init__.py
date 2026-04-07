@@ -21,10 +21,10 @@ import MorphIOOperators
 import MeshIOOperators
 
 bl_info = {
-	"name": "Starfield Geometry Bridge",
+	"name": "Starfield Geometry Bridge -port-5.x",
 	"author": "SesamePaste & Deveris",
-	"version": (1, 5, 0),
-	"blender": (3, 5, 0),
+	"version": (1, 6, 0),
+	"blender": (5, 0, 0),
 	"location": "File > Import-Export",
 	"description": "Export .nif, .dat and .mesh files for Starfield.",
 	"warning": "",

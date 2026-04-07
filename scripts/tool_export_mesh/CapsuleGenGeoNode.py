@@ -10,7 +10,7 @@ def capsule_gen_node_group():
 
 	#initialize capsule_gen nodes
 	#node Vector Math
-	vector_math = capsule_gen.nodes.new("ShaderNodeVectorMath")
+	vector_math = capsule_gen.nodes.new("GeometryNodeVectorMath")
 	vector_math.operation = 'SUBTRACT'
 	#Vector_002
 	vector_math.inputs[2].default_value = (0.0, 0.0, 0.0)
@@ -18,7 +18,7 @@ def capsule_gen_node_group():
 	vector_math.inputs[3].default_value = 1.0
 
 	#node Vector Math.001
-	vector_math_001 = capsule_gen.nodes.new("ShaderNodeVectorMath")
+	vector_math_001 = capsule_gen.nodes.new("GeometryNodeVectorMath")
 	vector_math_001.operation = 'LENGTH'
 	#Vector_001
 	vector_math_001.inputs[1].default_value = (0.0, 0.0, 0.0)
@@ -28,13 +28,13 @@ def capsule_gen_node_group():
 	vector_math_001.inputs[3].default_value = 1.0
 
 	#node Math
-	math = capsule_gen.nodes.new("ShaderNodeMath")
+	math = capsule_gen.nodes.new("FunctionNodeMath")
 	math.operation = 'DIVIDE'
 	#Value_002
 	math.inputs[2].default_value = 9.999999747378752e-05
 
 	#node Math.001
-	math_001 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_001 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_001.operation = 'ARCCOSINE'
 	#Value_001
 	math_001.inputs[1].default_value = 0.5
@@ -51,13 +51,13 @@ def capsule_gen_node_group():
 	group_output = capsule_gen.nodes.new("NodeGroupOutput")
 
 	#node Math.002
-	math_002 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_002 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_002.operation = 'SUBTRACT'
 	#Value_002
 	math_002.inputs[2].default_value = 9.999999747378752e-05
 
 	#node Vector Math.002
-	vector_math_002 = capsule_gen.nodes.new("ShaderNodeVectorMath")
+	vector_math_002 = capsule_gen.nodes.new("GeometryNodeVectorMath")
 	vector_math_002.operation = 'MULTIPLY'
 	#Vector_002
 	vector_math_002.inputs[2].default_value = (0.0, 0.0, 0.0)
@@ -65,13 +65,13 @@ def capsule_gen_node_group():
 	vector_math_002.inputs[3].default_value = 1.0
 
 	#node Vector Math.003
-	vector_math_003 = capsule_gen.nodes.new("ShaderNodeVectorMath")
+	vector_math_003 = capsule_gen.nodes.new("GeometryNodeVectorMath")
 	vector_math_003.operation = 'MULTIPLY_ADD'
 	#Scale
 	vector_math_003.inputs[3].default_value = 1.0
 
 	#node Math.003
-	math_003 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_003 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_003.operation = 'SUBTRACT'
 	#Value
 	math_003.inputs[0].default_value = 1.0
@@ -79,7 +79,7 @@ def capsule_gen_node_group():
 	math_003.inputs[2].default_value = 9.999999747378752e-05
 
 	#node Math.004
-	math_004 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_004 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_004.operation = 'DIVIDE'
 	#Value_002
 	math_004.inputs[2].default_value = 9.999999747378752e-05
@@ -123,7 +123,7 @@ def capsule_gen_node_group():
 
 		#initialize arc_instance nodes
 		#node Math
-		math_1 = arc_instance.nodes.new("ShaderNodeMath")
+		math_1 = arc_instance.nodes.new("FunctionNodeMath")
 		math_1.operation = 'SUBTRACT'
 		#Value
 		math_1.inputs[0].default_value = 0.0
@@ -131,7 +131,7 @@ def capsule_gen_node_group():
 		math_1.inputs[2].default_value = 0.5
 
 		#node Math.001
-		math_001_1 = arc_instance.nodes.new("ShaderNodeMath")
+		math_001_1 = arc_instance.nodes.new("FunctionNodeMath")
 		math_001_1.operation = 'MULTIPLY'
 		#Value_001
 		math_001_1.inputs[1].default_value = 2.0
@@ -631,7 +631,7 @@ def capsule_gen_node_group():
 	join_geometry = capsule_gen.nodes.new("GeometryNodeJoinGeometry")
 
 	#node Vector Math.004
-	vector_math_004 = capsule_gen.nodes.new("ShaderNodeVectorMath")
+	vector_math_004 = capsule_gen.nodes.new("GeometryNodeVectorMath")
 	vector_math_004.operation = 'SUBTRACT'
 	#Vector_002
 	vector_math_004.inputs[2].default_value = (0.0, 0.0, 0.0)
@@ -672,7 +672,7 @@ def capsule_gen_node_group():
 	combine_xyz.inputs[2].default_value = 0.0
 
 	#node Math.005
-	math_005 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_005 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_005.operation = 'RADIANS'
 	#Value_001
 	math_005.inputs[1].default_value = 0.5
@@ -680,7 +680,7 @@ def capsule_gen_node_group():
 	math_005.inputs[2].default_value = 0.5
 
 	#node Math.006
-	math_006 = capsule_gen.nodes.new("ShaderNodeMath")
+	math_006 = capsule_gen.nodes.new("FunctionNodeMath")
 	math_006.operation = 'MULTIPLY'
 	#Value_001
 	math_006.inputs[1].default_value = 180.0
