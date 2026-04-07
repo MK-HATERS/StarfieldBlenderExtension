@@ -375,3 +375,4 @@ FodyWeavers.xsd
 /scripts/MakePackage.py
 /UnkBlocks
 SFGBDocs/ReleaseTemplate/
+release_packages/
