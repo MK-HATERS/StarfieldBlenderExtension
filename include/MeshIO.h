@@ -2,7 +2,7 @@
 #include "Common.h"
 #include <DirectXMesh.h>
 #include "WavefrontWriter.h"
-#include <WaveFrontReader.h>
+//#include <WaveFrontReader.h>
 #include "json.hpp"
 
 namespace mesh {

@@ -559,6 +559,7 @@ bool MeshIO::GeometryFromJson(const json& jsonData, float scale_factor) {
 	return true;
 }
 
+/*
 bool mesh::MeshIO::GeometryFromOBJ(const std::string filename, float scale_factor)
 {
 	WaveFrontReader<uint16_t> wfr;
@@ -597,6 +598,7 @@ bool mesh::MeshIO::GeometryFromOBJ(const std::string filename, float scale_facto
 
 	return true;
 }
+*/
 
 bool MeshIO::LoadFromString(const std::string json_data, const float scale_factor, const uint32_t options) {
 	this->Clear();
@@ -1457,7 +1459,7 @@ void MeshIO::Optimize(std::vector<uint16_t>&	a_indices,
 	std::swap(temp_indices, m_indexReorder);
 
 	// Optimize triangle faces and reorder
-	ThrowIfFailed(DirectX::OptimizeFacesLRU(reinterpret_cast<uint16_t*>(temp_indices.data()), m_triCount, m_faceRemap.data()));
+	ThrowIfFailed(DirectX::OptimizeFacesLRU(reinterpret_cast<uint16_t*>(temp_indices.data()), m_triCount, m_vertexCount, m_faceRemap.data()));
 	ThrowIfFailed(DirectX::ReorderIB(reinterpret_cast<uint16_t*>(temp_indices.data()), m_triCount, m_faceRemap.data(), reinterpret_cast<uint16_t*>(m_indexReorder.data())));
 
 	std::swap(temp_indices, m_indexReorder);

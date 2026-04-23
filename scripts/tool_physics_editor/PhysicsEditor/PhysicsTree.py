@@ -36,7 +36,7 @@ class PhysicsTree(NodeTree):
 
     @classmethod
     def poll(cls, context):
-        _, enabled = addon_utils.check("tool_export_mesh")
+        _, enabled = addon_utils.check("Starfield_Blender_Extension")
         return enabled and compare_versions(context.scene.geometry_bridge_version, context.scene.sf_physics_editor_version, 'tool_physics_editor')
 
     def update(self):

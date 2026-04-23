@@ -41,7 +41,7 @@ import addon_utils
 import os
 import sys
 
-main_module_name = 'tool_export_mesh'
+main_module_name = 'Starfield_Blender_Extension'
 mods = addon_utils.modules()
 
 path = None
