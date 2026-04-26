@@ -21,3 +21,13 @@ You should get the latest release from this github page and follow this video: h
 * Starfield Geometry Bridge is an open-source program meant for ***everyone***. You have the freedom to use SGB for whatever you want however you like, within this agreement, the license on github page and the law.
 * As the original author of SGB, I kindly ***suggest*** you, users of SGB, to pass on this spirit of sharing and openness whenever possible. 
 * However, if you used SGB for assets in ***Paywall Mods***, you are ***suggested*** to inform your users of the use of **Reverse-Engineered Tools**. Please be responsible to your users by letting them know the use of 3rd party tools in the making of your mod.
+
+## Credits and Attributions
+This extension incorporates code and functionality from the following sources:
+
+### io_starfield_havokphysics
+- **Source**: Bethesda Game Studios' official Starfield Art Tools for 3dsMax
+- **Original Author**: Bethesda Game Studios
+- **License**: Copyright (C) Bethesda Game Studios. Used with permission for modding purposes.
+- **Description**: HKX physics export functionality adapted from the official 3dsMax tools for use in Blender.
+- **Integration**: Ported as `tool_havokphysics` module within the Starfield Blender Extension.
