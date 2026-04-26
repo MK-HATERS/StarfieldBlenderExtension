@@ -49,6 +49,7 @@ __extra_compatible_dict__ = {
 }
 
 def check_compatibility(submodule_name: str, raise_if_not_found: bool = False) -> bool:
+    import os
     main_name = 'starfield_blender_extension'
     _, enabled = addon_utils.check(main_name)
     if not enabled:
@@ -56,20 +57,50 @@ def check_compatibility(submodule_name: str, raise_if_not_found: bool = False) -
             raise Exception(f"Main module '{main_name}' not enabled.")
         return False
 
-    _, enabled = addon_utils.check(submodule_name)
-    if not enabled:
-        if raise_if_not_found:
-            raise Exception(f"Submodule '{submodule_name}' not enabled.")
-        return False
+    # For bundled submodules (directories within the main addon), check if directory exists
+    bundled_submodules = ['tool_batch_process', 'tool_physics_editor']
+    if submodule_name in bundled_submodules:
+        # Get the main addon module to find its path
+        mods = addon_utils.modules()
+        main_mod = None
+        for mod in mods:
+            if mod.__name__ == main_name:
+                main_mod = mod
+                break
+        
+        if main_mod and hasattr(main_mod, '__file__'):
+            addon_dir = os.path.dirname(main_mod.__file__)
+            submodule_path = os.path.join(addon_dir, submodule_name)
+            if not os.path.exists(submodule_path):
+                if raise_if_not_found:
+                    raise Exception(f"Submodule directory '{submodule_name}' not found at {submodule_path}.")
+                return False
+        else:
+            if raise_if_not_found:
+                raise Exception(f"Could not determine main addon path for submodule check.")
+            return False
+    else:
+        # For external addons, check if they're enabled
+        _, enabled = addon_utils.check(submodule_name)
+        if not enabled:
+            if raise_if_not_found:
+                raise Exception(f"Submodule '{submodule_name}' not enabled.")
+            return False
     
+    # Get version info
     mods = addon_utils.modules()
+    main_plugin_version = None
     submodule_version = None
     for mod in mods:
         if mod.__name__ == main_name:
             main_plugin_version = Version(mod.bl_info['version'])
-        elif mod.__name__ == submodule_name:
+        elif mod.__name__ == submodule_name and submodule_name not in bundled_submodules:
             submodule_version = Version(mod.bl_info['version'])
 
+    # For bundled submodules, we assume compatibility if the directory exists
+    if submodule_name in bundled_submodules:
+        return True
+    
     return compare_versions(main_plugin_version.as_str(), submodule_version.as_str(), submodule_name)
         
 import functools
