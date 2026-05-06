@@ -10,6 +10,7 @@ from . import utils_math
 from . import utils_morph_attrs
 
 from .utils_common import timer
+from . import utils_common as utils
 
 class AtomicException(Exception):
     pass
@@ -573,7 +574,8 @@ class Primitive():
             self.raw_normals = np.array(self.raw_normals, dtype=np.float32)
         else:
             self.raw_normals = np.empty(len(self.blender_mesh.loops) * 3, dtype=np.float32)
-            self.blender_mesh.calc_normals_split()
+            # Ensure loop normals exist (compatibility wrapper)
+            utils.ensure_loop_normals(self.blender_mesh)
             self.blender_mesh.loops.foreach_get('normal', self.raw_normals)
         
         self.raw_normals = self.raw_normals.reshape(-1, 3)

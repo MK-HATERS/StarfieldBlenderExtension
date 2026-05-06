@@ -4,24 +4,7 @@ import shutil
 from .utils import utils_blender
 import functools
 from . import version
-
-__sub_modules_checklist__ = [
-    'tool_physics_editor',
-    'tool_batch_process'
-]
-
-def _check_submodules():
-    report = {}
-    for submodule in __sub_modules_checklist__:
-        try:
-            if not version.check_compatibility(submodule, True):
-                report[submodule] = "Versions Not Compatible"
-            else:
-                report[submodule] = "Compatible"
-        except Exception as e:
-            report[submodule] = "Not found"
-        
-    return report
+from .utils import utils_common
 
 class ChooseFileForPreferencesOperator(bpy.types.Operator):
     bl_idname = "object.choose_file_for_preferences"
@@ -68,12 +51,12 @@ class InstallModulesOperator(bpy.types.Operator):
     def execute(self, context):
         preferences = utils_blender.get_preferences()
         # Install scipy
-        try:
-            import scipy
-        except ImportError:
-            import pip
-            pip.main(['install', 'scipy', '--user'])
-            preferences.scipy_installed = True
+        # Use the addon's installer helper so packages are installed into
+        # Blender's user scripts/modules dir and the path is appended.
+        success, msg = utils_common.ensure_package('scipy')
+        preferences.scipy_installed = success
+        if not success:
+            self.report({'ERROR'}, f"Failed to install scipy: {msg}")
         return {'FINISHED'}
 
     def draw(self, context):
@@ -104,20 +87,23 @@ class SGBPreferences(bpy.types.AddonPreferences):
     )
 
     def _check_scipy_installed(self):
+        # Ensure our user modules path is visible to the import system
         try:
+            modules_path = utils_common.get_modules_path()
+            utils_common.append_modules_to_sys_path(modules_path)
+        except Exception:
+            pass
+
+        try:
+            import importlib
+            importlib.invalidate_caches()
             import scipy
             self.scipy_installed = True
-        except ImportError:
+        except Exception:
             self.scipy_installed = False
 
     def draw(self, context):
         layout = self.layout
-
-        report = _check_submodules()
-        column = layout.column()
-        column.label(text="Installed Submodules")
-        for submodule in report:
-            column.label(text=f"{submodule}: {report[submodule]}")
 
         sublayout = layout.column(heading="Default Export Path")
         sublayout.enabled = True

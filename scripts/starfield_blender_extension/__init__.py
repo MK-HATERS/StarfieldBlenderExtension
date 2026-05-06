@@ -2,10 +2,6 @@ import bpy
 import os
 import sys
 
-dir = os.path.dirname(os.path.realpath(__file__))
-if dir not in sys.path:
-	sys.path.append(dir)
-
 from .utils import utils_common as utils
 
 # Modules
@@ -14,7 +10,7 @@ from .operators import ImportSkeleOp, BoneRegionsOperator, NifIOOperators, Morph
 from . import Preferences
 
 # StarfieldArtTools modules
-from .ui import general_panel, object_panel, collision_panel, material_panel, vertex_group_panel, animation_panel, view3d_panel
+from .ui import object_panel, collision_panel, material_panel, vertex_group_panel, animation_panel, view3d_panel
 from .operators import armature_ops, collision_ops, export_ops, material_ops, vertex_group_ops
 from .types import object_types, armature_types, collision_types, export_types, material_types, animation_types, ui_types
 from .utils import bgs, bs_plugin_data
@@ -77,6 +73,53 @@ __scene_global_attrs__ = {
 		],
 		default='object'
 	),
+	"max_border": utils.__prop_wrapper(
+		bpy.props.FloatProperty,
+		name="Compression Border",
+		description="2 for body parts, 0 (Auto) otherwise.",
+		default=0,
+	),
+	"use_world_origin": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Use world origin",
+		description="Use world instead of object origin as output geometry's origin.",
+		default=True
+	),
+	"WEIGHTS": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Weights",
+		description="Export vertex weights, only work with valid armature modifiers attached to objects.",
+		default=True
+	),
+	"export_morph": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Morph Data",
+		description="Export shape keys as morph keys",
+		default=True
+	),
+	"export_sf_mesh_open_folder": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Open folder",
+		default=False,
+	),
+	"export_sf_mesh_hash_result": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Generate hash names",
+		description="Export into [hex1]\\[hex2].mesh instead of [model_name].mesh",
+		default=False,
+	),
+	"use_secondary_uv": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Use Secondary UV",
+		description="Use the topmost non-active UV map (if possible) as secondary UV",
+		default=False
+	),
+	"auto_add_sharp": utils.__prop_wrapper(
+		bpy.props.BoolProperty,
+		name="Auto Add Sharp",
+		description="Automatically add sharp edges during preprocessing",
+		default=False
+	),
 	"br_face_type": utils.__prop_wrapper(
 		bpy.props.EnumProperty,
 		name="Face Type",
@@ -106,7 +149,6 @@ __modules__ = [
 	MorphIOOperators,
 	NifIOOperators,
 	# StarfieldArtTools modules
-	general_panel,
 	collision_panel,
 	material_panel,
 	vertex_group_panel,

@@ -676,7 +676,7 @@ def CreateMorphObjSet(options, context, basis_obj, ref_objs, target_objs: list, 
 		
 		bpy.ops.object.mode_set(mode='OBJECT')
 		utils_blender.SetActiveObject(me_obj)
-		bpy.ops.object.shade_smooth(use_auto_smooth=True)
+		bpy.ops.object.shade_smooth()
 		utils_blender.move_object_to_collection([me_obj], prev_coll)
 		utils_blender.move_object_to_parent([me_obj], morph_node)
 

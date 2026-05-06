@@ -4,11 +4,13 @@ import os
 from .. import MeshIO, MorphIO
 
 from ..utils import utils_blender, utils_common as utils
+from ..utils import bs_plugin_data
 
 # Export operator
 class ExportCustomMesh(bpy.types.Operator):
 	bl_idname = "export_scene.custom_mesh"
 	bl_label = "Export Custom Mesh"
+	bl_description = "Export mesh data in Starfield .mesh format for external geometry"
 	
 	filepath: bpy.props.StringProperty(options={'HIDDEN'})
 	filename: bpy.props.StringProperty(default='untitled.mesh')
@@ -119,6 +121,12 @@ class ExportCustomMesh(bpy.types.Operator):
 		if not _try_import_success:
 			self.report({'ERROR'}, _rtn_str)
 			return {'CANCELLED'}
+
+		# Persist any changes made in the file browser back to scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		settings.compression_border = self.max_border
+		settings.export_morph_data = self.export_morph
+		settings.hash_file_name = self.export_sf_mesh_hash_result
 		
 		original_active = utils_blender.GetActiveObject()
 		original_selected = utils_blender.GetSelectedObjs(True)
@@ -141,15 +149,44 @@ class ExportCustomMesh(bpy.types.Operator):
 		return mesh_success
 
 	def invoke(self, context, event):
+		# Sync operator properties with scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		self.max_border = settings.compression_border
+		self.export_morph = settings.export_morph_data
+		self.export_sf_mesh_hash_result = settings.hash_file_name
+
 		_obj = context.active_object
 		if _obj:
 			self.filename = utils.sanitize_filename(_obj.name) + '.mesh'
 		else:
 			self.filename = 'untitled.mesh'
 
-		if os.path.isdir(os.path.dirname(self.filepath)):
-			self.filepath = os.path.join(os.path.dirname(self.filepath),self.filename)
+		# Prefer the external geometry export directory if set, otherwise fall
+		# back to the global export_directory. This ensures the file browser
+		# opens where the user configured external geometry to be written.
+		export_dir = None
+		try:
+			export_dir = settings.external_geometry_export_directory
+		except Exception:
+			export_dir = None
 
+		if not export_dir:
+			# fallback to general export directory
+			export_dir = getattr(settings, 'export_directory', None)
+
+		if export_dir:
+			export_dir = os.path.expanduser(os.path.expandvars(export_dir))
+			if os.path.isdir(export_dir):
+				# Set filepath and perform export immediately without showing
+				# a file browser.
+				self.filepath = os.path.join(export_dir, self.filename)
+				# Call execute directly to perform the export
+				return self.execute(context)
+			else:
+				# If the configured path doesn't exist, fall back to file browser
+				pass
+
+		# No export directory configured -> prompt user with file browser
 		context.window_manager.fileselect_add(self)
 		return {'RUNNING_MODAL'}
 

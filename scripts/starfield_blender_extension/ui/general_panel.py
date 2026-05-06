@@ -31,15 +31,20 @@ class VIEW3D_PT_bgs_starfield_general(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_label = "General"
+    bl_category = "BGS Starfield"
     bl_order = 0
 
     def draw(self, context):
         layout = self.layout
         layout.separator()
 
-        # Asset Folder
+        # Config section
         box = layout.box()
+        box.label(text="Config")
         box.prop(context.scene, "assets_folder", text="Asset Folder")
+        
+        # Import Skeleton Button
+        box.operator("object.import_skeleton_from_assets", text="Add Skeleton from Assets", icon='ARMATURE_DATA')
 
         # Units section
         box = layout.box()

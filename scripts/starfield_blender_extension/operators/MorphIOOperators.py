@@ -1,8 +1,10 @@
 import bpy
+import os
 
 from .. import MorphIO
 
 from ..utils import utils_common as utils, utils_blender	
+from ..utils import bs_plugin_data
 
 class ImportCustomMorph(bpy.types.Operator):
 	bl_idname = "import_scene.custom_morph"
@@ -78,6 +80,7 @@ class ImportCustomMorph(bpy.types.Operator):
 class ExportCustomMorph(bpy.types.Operator):
 	bl_idname = "export_scene.custom_morph"
 	bl_label = "Export Custom Morph"
+	bl_description = "Export morph target data in Starfield .dat format for shape key animations"
 	
 	filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 	filename: bpy.props.StringProperty(default='morph.dat')
@@ -165,7 +168,15 @@ class ExportCustomMorph(bpy.types.Operator):
 		if not _try_import_success:
 			self.report({'ERROR'}, _rtn_str)
 			return {'CANCELLED'}
-		
+		# Persist any changes made in the file browser back to scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		settings.morph_use_secondary_uv = self.use_secondary_uv
+		settings.morph_snapping_enabled = self.snapping_enabled
+		settings.morph_snapping_range = self.snapping_range
+		settings.morph_snap_lerp_coeff = self.snap_lerp_coeff
+		settings.morph_snap_delta_positions = self.snap_delta_positions
+		settings.morph_snap_lerp_coeff_delta_positions = self.snap_lerp_coeff_delta_positions
+
 		if self.snapping_enabled:
 			rtn, _ = MorphIO.ExportMorph_alt(self, context, self.filepath, self, self.snapping_range, self.snap_delta_positions, self.snap_lerp_coeff, self.snap_lerp_coeff_delta_positions)
 		else:
@@ -175,6 +186,15 @@ class ExportCustomMorph(bpy.types.Operator):
 	def invoke(self, context, event):
 		self.filename = "morph.dat"
 
+		# Sync operator properties with scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		self.use_secondary_uv = settings.morph_use_secondary_uv
+		self.snapping_enabled = settings.morph_snapping_enabled
+		self.snapping_range = settings.morph_snapping_range
+		self.snap_lerp_coeff = settings.morph_snap_lerp_coeff
+		self.snap_delta_positions = settings.morph_snap_delta_positions
+		self.snap_lerp_coeff_delta_positions = settings.morph_snap_lerp_coeff_delta_positions
+
 		_obj = context.active_object
 		if _obj:
 			self.filename = utils.sanitize_filename(_obj.name) + '.dat'
@@ -183,6 +203,25 @@ class ExportCustomMorph(bpy.types.Operator):
 
 		if os.path.isdir(os.path.dirname(self.filepath)):
 			self.filepath = os.path.join(os.path.dirname(self.filepath),self.filename)
+
+		# Prefer external geometry export directory then general export
+		# directory. If configured, export immediately without file dialog.
+		export_dir = None
+		try:
+			export_dir = settings.external_geometry_export_directory
+		except Exception:
+			export_dir = None
+
+		if not export_dir:
+			export_dir = getattr(settings, 'export_directory', '')
+
+		if export_dir:
+			export_dir = os.path.expanduser(os.path.expandvars(export_dir))
+			if os.path.isdir(export_dir):
+				self.filepath = os.path.join(export_dir, self.filename)
+				return self.execute(context)
+			else:
+				pass
 
 		context.window_manager.fileselect_add(self)
 		return {'RUNNING_MODAL'}

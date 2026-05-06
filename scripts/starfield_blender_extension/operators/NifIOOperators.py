@@ -14,6 +14,8 @@ from ..utils.utils_material import is_mat
 
 from ..utils import utils_common as utils
 
+from ..utils import bs_plugin_data
+
 def re_filter_update(self, context):
 	self.re_nif_file_list.clear()
 	self.re_nif_file_list_index = 0
@@ -385,6 +387,7 @@ def get_material_names(self, context):
 class ExportCustomNif(bpy.types.Operator):
 	bl_idname = "export_scene.custom_nif"
 	bl_label = "Export Custom Nif"
+	bl_description = "Export scene in NIF format for general 3D model compatibility"
 	
 	filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 	filename: bpy.props.StringProperty(default='untitled.nif')
@@ -528,7 +531,6 @@ class ExportCustomNif(bpy.types.Operator):
 		
 		layout.separator()
 		layout.label(text="Special Controls:") 
-		layout.prop(self, "use_internal_geom_data")
 		layout.prop(self, "is_head_object")
 		layout.prop(self, "export_sf_mesh_hash_result")
 
@@ -557,10 +559,28 @@ class ExportCustomNif(bpy.types.Operator):
 		layout.prop(self, "export_sf_mesh_open_folder")
 
 	def execute(self, context):
-		_try_import_success, _rtn_str = utils._try_import("import scipy", "Scipy not installed. Install it in Plugin Preferences Panel.", raise_exception=False)
-		if not _try_import_success:
-			self.report({'ERROR'}, _rtn_str)
+		# Ensure scipy is available; attempt to install it via Blender's Python if missing
+		success, msg = utils.ensure_package('scipy')
+		if not success:
+			self.report({'ERROR'}, f"Scipy not installed and automatic install failed: {msg}")
 			return {'CANCELLED'}
+
+		# Persist any changes made in the file browser back to scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		settings.nif_export_template = self.export_template
+		settings.compression_border = self.max_border
+		settings.export_weights = self.WEIGHTS
+		settings.nif_use_secondary_uv = self.use_secondary_uv
+		settings.nif_physics_tree = self.physics_tree
+		settings.nif_export_material = self.export_material
+		settings.nif_is_head_object = self.is_head_object
+		settings.hash_file_name = self.export_sf_mesh_hash_result
+		settings.nif_snapping_enabled = self.snapping_enabled
+		settings.nif_snapping_range = self.snapping_range
+		settings.nif_snap_lerp_coeff = self.snap_lerp_coeff
+		settings.nif_additive_export = self.additive_export
+		settings.nif_overwrite_material_paths = self.overwrite_material_paths
+		# Open-folder behavior removed from panel; keep default scene behavior
 
 		if self.is_head_object == "Auto":
 			root = utils_blender.GetActiveObject()
@@ -622,14 +642,48 @@ class ExportCustomNif(bpy.types.Operator):
 		return {'FINISHED'}
 
 	def invoke(self, context, event):
+		# Sync operator properties with scene settings
+		settings = bs_plugin_data.scene_get_bs_fbx_export_settings(context.scene)
+		self.export_template = settings.nif_export_template
+		self.max_border = settings.compression_border
+		self.WEIGHTS = settings.export_weights
+		self.use_secondary_uv = settings.nif_use_secondary_uv
+		self.physics_tree = settings.nif_physics_tree
+		self.export_material = settings.nif_export_material
+		self.is_head_object = settings.nif_is_head_object
+		self.export_sf_mesh_hash_result = settings.hash_file_name
+		# If external geometry is enabled in scene settings, ensure operator
+		# will write external mesh files (i.e., disable internal_geom_data).
+		self.use_internal_geom_data = not getattr(settings, 'external_geometry', False)
+		self.snapping_enabled = settings.nif_snapping_enabled
+		self.snapping_range = settings.nif_snapping_range
+		self.snap_lerp_coeff = settings.nif_snap_lerp_coeff
+		self.additive_export = settings.nif_additive_export
+		self.overwrite_material_paths = settings.nif_overwrite_material_paths
+		# Open-folder behavior removed from panel; no operator sync required
+
 		_obj = context.active_object
 		if _obj:
 			self.filename = utils.sanitize_filename(_obj.name) + '.nif'
 		else:
 			self.filename = 'untitled.nif'
 
+		# For NIF export, prefer the general export directory. Do NOT use
+		# the external mesh directory here (that is for .mesh exports).
+		export_dir = getattr(settings, 'export_directory', '')
+
+		if export_dir:
+			export_dir = os.path.expanduser(os.path.expandvars(export_dir))
+			if os.path.isdir(export_dir):
+				self.filepath = os.path.join(export_dir, self.filename)
+				# Execute export immediately
+				return self.execute(context)
+			else:
+				# Fall back to normal behavior if path doesn't exist
+				pass
+
 		if os.path.isdir(os.path.dirname(self.filepath)):
-			self.filepath = os.path.join(os.path.dirname(self.filepath),self.filename)
+			self.filepath = os.path.join(os.path.dirname(self.filepath), self.filename)
 
 		context.window_manager.fileselect_add(self)
 		return {'RUNNING_MODAL'}

@@ -69,8 +69,10 @@ class BGS_STARFIELD_PT_object_mat_palette(bpy.types.Panel):
             box.prop(material_bgs_props, "texture_normal",
                      text="Normal Texture (Gloss)")
 
-        box.operator(bs_plugin_data.bl_id_with_project_suffix(
-            'bgs_starfield.load_path_material'), icon='TEXTURE')
+        row = box.row(align=True)
+        row.operator(bs_plugin_data.bl_id_with_project_suffix('bgs_starfield.load_path_material'), icon='TEXTURE')
+        # Single import button (shows options dialog)
+        row.operator(bs_plugin_data.bl_id_with_project_suffix('bgs_starfield.import_mat_with_options'), text="Import .mat")
 
         box.prop(material_bgs_props, "show_additional_texture_settings",
                  text="Show Additional Texture Slots")

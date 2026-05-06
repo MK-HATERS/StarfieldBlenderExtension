@@ -371,6 +371,7 @@ def ExportNif(options, context, operator, head_object_mode = 'None'):
 
 	_data['geometries'] = []
 
+	operator.report({'INFO'}, f'Exporting NIF to: {export_folder}')
 	for mesh_obj in geometries:
 		if mesh_obj.data == None:
 			operator.report({'WARNING'}, f'Object {mesh_obj.name} has no mesh. Skipping...')
@@ -452,10 +453,25 @@ def ExportNif(options, context, operator, head_object_mode = 'None'):
 				mesh_name = utils.sanitize_filename(mesh_obj.data.name)
 			factory_name = mesh_folder + '\\' + mesh_name + ".mesh"
 
-		result_file_folder = os.path.join(export_folder, 'geometries', mesh_folder)
+		# Determine where to write external mesh files. If the scene is
+		# configured to use external geometry and an external export
+		# directory is set, use that as the base; otherwise default to
+		# the nif's export folder.
+		export_mesh_base = export_folder
+		# Write mesh files into the same export folder as the NIF. The UI no
+		# longer exposes a separate external mesh directory; therefore use
+		# the NIF export's folder as the base for geometries as well.
+		export_mesh_base = export_folder
+
+		result_file_folder = os.path.join(export_mesh_base, 'geometries', mesh_folder)
 		if not options.use_internal_geom_data:
 			os.makedirs(result_file_folder, exist_ok = True)
 		result_file_path = os.path.join(result_file_folder, mesh_name + ".mesh")
+		# Inform where external meshes will be written (if applicable)
+		if not options.use_internal_geom_data:
+			operator.report({'INFO'}, f'Will write external mesh for {mesh_obj.name} to: {result_file_path}')
+		else:
+			operator.report({'INFO'}, f'Embedding geometry for {mesh_obj.name} into NIF')
 
 		if mode == "SINGLE_MESH":
 			utils_blender.SetSelectObjects(original_selected)

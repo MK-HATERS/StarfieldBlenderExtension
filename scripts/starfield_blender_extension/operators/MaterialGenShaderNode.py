@@ -4,116 +4,81 @@ import bpy
 def sf_shadernode_node_group():
     sf_shadernode= bpy.data.node_groups.new(type = 'ShaderNodeTree', name = "SF_ShaderNode")
 
-    #initialize sf_shadernode nodes
-    #node Group Output
-    group_output = sf_shadernode.nodes.new("NodeGroupOutput")
-    #sf_shadernode outputs
+    #initialize sf_shadernode interface
     #output BSDF
-    sf_shadernode.outputs.new('NodeSocketShader', "BSDF")
-    sf_shadernode.outputs[0].attribute_domain = 'POINT'
+    bsdf_socket = sf_shadernode.interface.new_socket(name="BSDF", socket_type='NodeSocketShader', in_out='OUTPUT', description="")
+    bsdf_socket.attribute_domain = 'POINT'
 
     #output Displacement
-    sf_shadernode.outputs.new('NodeSocketVector', "Displacement")
-    sf_shadernode.outputs[1].default_value = (0.0, 0.0, 0.0)
-    sf_shadernode.outputs[1].min_value = -3.4028234663852886e+38
-    sf_shadernode.outputs[1].max_value = 3.4028234663852886e+38
-    sf_shadernode.outputs[1].attribute_domain = 'POINT'
+    displacement_socket = sf_shadernode.interface.new_socket(name="Displacement", socket_type='NodeSocketVector', in_out='OUTPUT', description="")
+    displacement_socket.attribute_domain = 'POINT'
 
-
-
-    #node Mix
-    mix = sf_shadernode.nodes.new("ShaderNodeMix")
-    mix.data_type = 'RGBA'
-    mix.clamp_factor = True
-    mix.factor_mode = 'UNIFORM'
-    mix.blend_type = 'MIX'
-    #Factor_Float
-    mix.inputs[0].default_value = 0.20000000298023224
-    #Factor_Vector
-    mix.inputs[1].default_value = (0.5, 0.5, 0.5)
-    #A_Float
-    mix.inputs[2].default_value = 0.0
-    #B_Float
-    mix.inputs[3].default_value = 0.0
-    #A_Vector
-    mix.inputs[4].default_value = (0.0, 0.0, 0.0)
-    #B_Vector
-    mix.inputs[5].default_value = (0.0, 0.0, 0.0)
-
-    #node Invert
-    invert = sf_shadernode.nodes.new("ShaderNodeInvert")
-    #Fac
-    invert.inputs[0].default_value = 1.0
-
-    #node Group Input
-    group_input = sf_shadernode.nodes.new("NodeGroupInput")
-    #sf_shadernode inputs
     #input COLOR
-    sf_shadernode.inputs.new('NodeSocketColor', "COLOR")
-    sf_shadernode.inputs[0].default_value = (0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0)
-    sf_shadernode.inputs[0].attribute_domain = 'POINT'
+    color_socket = sf_shadernode.interface.new_socket(name="COLOR", socket_type='NodeSocketColor', in_out='INPUT', description="")
+    color_socket.default_value = (0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0)
+    color_socket.attribute_domain = 'POINT'
 
     #input NORMAL
-    sf_shadernode.inputs.new('NodeSocketVector', "NORMAL")
-    sf_shadernode.inputs[1].default_value = (0.0, 0.0, 0.0)
-    sf_shadernode.inputs[1].min_value = -3.4028234663852886e+38
-    sf_shadernode.inputs[1].max_value = 3.4028234663852886e+38
-    sf_shadernode.inputs[1].attribute_domain = 'POINT'
-    sf_shadernode.inputs[1].hide_value = True
+    normal_socket = sf_shadernode.interface.new_socket(name="NORMAL", socket_type='NodeSocketVector', in_out='INPUT', description="")
+    normal_socket.default_value = (0.0, 0.0, 0.0)
+    normal_socket.min_value = -3.4028234663852886e+38
+    normal_socket.max_value = 3.4028234663852886e+38
+    normal_socket.attribute_domain = 'POINT'
+    normal_socket.hide_value = True
 
     #input OPACITY
-    sf_shadernode.inputs.new('NodeSocketFloatFactor', "OPACITY")
-    sf_shadernode.inputs[2].default_value = 1.0
-    sf_shadernode.inputs[2].min_value = 0.0
-    sf_shadernode.inputs[2].max_value = 1.0
-    sf_shadernode.inputs[2].attribute_domain = 'POINT'
+    opacity_socket = sf_shadernode.interface.new_socket(name="OPACITY", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    opacity_socket.default_value = 1.0
+    opacity_socket.min_value = 0.0
+    opacity_socket.max_value = 1.0
+    opacity_socket.attribute_domain = 'POINT'
 
     #input METAL
-    sf_shadernode.inputs.new('NodeSocketFloatFactor', "METAL")
-    sf_shadernode.inputs[3].default_value = 0.0
-    sf_shadernode.inputs[3].min_value = 0.0
-    sf_shadernode.inputs[3].max_value = 1.0
-    sf_shadernode.inputs[3].attribute_domain = 'POINT'
+    metal_socket = sf_shadernode.interface.new_socket(name="METAL", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    metal_socket.default_value = 0.0
+    metal_socket.min_value = 0.0
+    metal_socket.max_value = 1.0
+    metal_socket.attribute_domain = 'POINT'
 
     #input ROUGH
-    sf_shadernode.inputs.new('NodeSocketFloatFactor', "ROUGH")
-    sf_shadernode.inputs[4].default_value = 0.5
-    sf_shadernode.inputs[4].min_value = 0.0
-    sf_shadernode.inputs[4].max_value = 1.0
-    sf_shadernode.inputs[4].attribute_domain = 'POINT'
+    rough_socket = sf_shadernode.interface.new_socket(name="ROUGH", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    rough_socket.default_value = 0.5
+    rough_socket.min_value = 0.0
+    rough_socket.max_value = 1.0
+    rough_socket.attribute_domain = 'POINT'
 
     #input AO
-    sf_shadernode.inputs.new('NodeSocketFloatFactor', "AO")
-    sf_shadernode.inputs[5].default_value = 0.0
-    sf_shadernode.inputs[5].min_value = 0.0
-    sf_shadernode.inputs[5].max_value = 1.0
-    sf_shadernode.inputs[5].attribute_domain = 'POINT'
+    ao_socket = sf_shadernode.interface.new_socket(name="AO", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    ao_socket.default_value = 0.0
+    ao_socket.min_value = 0.0
+    ao_socket.max_value = 1.0
+    ao_socket.attribute_domain = 'POINT'
 
     #input EMISSIVE
-    sf_shadernode.inputs.new('NodeSocketColor', "EMISSIVE")
-    sf_shadernode.inputs[6].default_value = (0.0, 0.0, 0.0, 1.0)
-    sf_shadernode.inputs[6].attribute_domain = 'POINT'
+    emissive_socket = sf_shadernode.interface.new_socket(name="EMISSIVE", socket_type='NodeSocketColor', in_out='INPUT', description="")
+    emissive_socket.default_value = (0.0, 0.0, 0.0, 1.0)
+    emissive_socket.attribute_domain = 'POINT'
 
     #input HEIGHT
-    sf_shadernode.inputs.new('NodeSocketVector', "HEIGHT")
-    sf_shadernode.inputs[7].default_value = (0.0, 0.0, 0.0)
-    sf_shadernode.inputs[7].min_value = -3.4028234663852886e+38
-    sf_shadernode.inputs[7].max_value = 3.4028234663852886e+38
-    sf_shadernode.inputs[7].attribute_domain = 'POINT'
+    height_socket = sf_shadernode.interface.new_socket(name="HEIGHT", socket_type='NodeSocketVector', in_out='INPUT', description="")
+    height_socket.default_value = (0.0, 0.0, 0.0)
+    height_socket.min_value = -3.4028234663852886e+38
+    height_socket.max_value = 3.4028234663852886e+38
+    height_socket.attribute_domain = 'POINT'
 
     #input A_TEST_THRESH
-    sf_shadernode.inputs.new('NodeSocketFloat', "A_TEST_THRESH")
-    sf_shadernode.inputs[8].default_value = 0.0
-    sf_shadernode.inputs[8].min_value = 0.0
-    sf_shadernode.inputs[8].max_value = 1.0
-    sf_shadernode.inputs[8].attribute_domain = 'POINT'
+    a_test_thresh_socket = sf_shadernode.interface.new_socket(name="A_TEST_THRESH", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    a_test_thresh_socket.default_value = 0.0
+    a_test_thresh_socket.min_value = 0.0
+    a_test_thresh_socket.max_value = 1.0
+    a_test_thresh_socket.attribute_domain = 'POINT'
 
     #input A_BLEND_CHANNEL
-    sf_shadernode.inputs.new('NodeSocketFloat', "A_BLEND_CHANNEL")
-    sf_shadernode.inputs[9].default_value = 0.0
-    sf_shadernode.inputs[9].min_value = 0.0
-    sf_shadernode.inputs[9].max_value = 4.0
-    sf_shadernode.inputs[9].attribute_domain = 'POINT'
+    a_blend_channel_socket = sf_shadernode.interface.new_socket(name="A_BLEND_CHANNEL", socket_type='NodeSocketFloat', in_out='INPUT', description="")
+    a_blend_channel_socket.default_value = 0.0
+    a_blend_channel_socket.min_value = 0.0
+    a_blend_channel_socket.max_value = 4.0
+    a_blend_channel_socket.attribute_domain = 'POINT'
 
 
 
@@ -121,46 +86,54 @@ def sf_shadernode_node_group():
     principled_bsdf = sf_shadernode.nodes.new("ShaderNodeBsdfPrincipled")
     principled_bsdf.distribution = 'GGX'
     principled_bsdf.subsurface_method = 'RANDOM_WALK'
-    #Subsurface
-    principled_bsdf.inputs[1].default_value = 0.0
-    #Subsurface Radius
-    principled_bsdf.inputs[2].default_value = (1.0, 0.20000000298023224, 0.10000000149011612)
-    #Subsurface Color
-    principled_bsdf.inputs[3].default_value = (0.800000011920929, 0.800000011920929, 0.800000011920929, 1.0)
-    #Subsurface IOR
-    principled_bsdf.inputs[4].default_value = 1.399999976158142
-    #Subsurface Anisotropy
-    principled_bsdf.inputs[5].default_value = 0.0
-    #Specular
+    # Diffuse Roughness
     principled_bsdf.inputs[7].default_value = 0.0
-    #Specular Tint
+    # Subsurface Weight
     principled_bsdf.inputs[8].default_value = 0.0
-    #Anisotropic
+    # Subsurface Radius
+    principled_bsdf.inputs[9].default_value = (1.0, 0.2, 0.1)
+    # Subsurface Scale
     principled_bsdf.inputs[10].default_value = 0.0
-    #Anisotropic Rotation
-    principled_bsdf.inputs[11].default_value = 0.0
-    #Sheen
+    # Subsurface IOR
+    principled_bsdf.inputs[11].default_value = 1.4
+    # Subsurface Anisotropy
     principled_bsdf.inputs[12].default_value = 0.0
-    #Sheen Tint
-    principled_bsdf.inputs[13].default_value = 0.5
-    #Clearcoat
-    principled_bsdf.inputs[14].default_value = 0.0
-    #Clearcoat Roughness
-    principled_bsdf.inputs[15].default_value = 0.029999999329447746
-    #IOR
-    principled_bsdf.inputs[16].default_value = 1.4500000476837158
-    #Transmission
-    principled_bsdf.inputs[17].default_value = 0.0
-    #Transmission Roughness
+    # Specular IOR Level
+    principled_bsdf.inputs[13].default_value = 0.0
+    # Specular Tint
+    principled_bsdf.inputs[14].default_value = (0.0, 0.0, 0.0, 1.0)
+    # Anisotropic
+    principled_bsdf.inputs[15].default_value = 0.0
+    # Anisotropic Rotation
+    principled_bsdf.inputs[16].default_value = 0.0
+    # Tangent
+    principled_bsdf.inputs[17].default_value = (0.0, 0.0, 0.0)
+    # Transmission Weight
     principled_bsdf.inputs[18].default_value = 0.0
-    #Emission Strength
-    principled_bsdf.inputs[20].default_value = 1.0
-    #Clearcoat Normal
+    # Coat Weight
+    principled_bsdf.inputs[19].default_value = 0.0
+    # Coat Roughness
+    principled_bsdf.inputs[20].default_value = 0.03
+    # Coat IOR
+    principled_bsdf.inputs[21].default_value = 1.5
+    # Coat Tint
+    principled_bsdf.inputs[22].default_value = (1.0, 1.0, 1.0, 1.0)
+    # Coat Normal
     principled_bsdf.inputs[23].default_value = (0.0, 0.0, 0.0)
-    #Tangent
-    principled_bsdf.inputs[24].default_value = (0.0, 0.0, 0.0)
-    #Weight
+    # Sheen Weight
+    principled_bsdf.inputs[24].default_value = 0.0
+    # Sheen Roughness
     principled_bsdf.inputs[25].default_value = 0.0
+    # Sheen Tint
+    principled_bsdf.inputs[26].default_value = (1.0, 1.0, 1.0, 1.0)
+    # Emission Color
+    principled_bsdf.inputs[27].default_value = (0.0, 0.0, 0.0, 1.0)
+    # Emission Strength
+    principled_bsdf.inputs[28].default_value = 1.0
+    # Thin Film Thickness
+    principled_bsdf.inputs[29].default_value = 0.0
+    # Thin Film IOR
+    principled_bsdf.inputs[30].default_value = 1.33
 
     #node Group Input.001
     group_input_001 = sf_shadernode.nodes.new("NodeGroupInput")
@@ -188,6 +161,18 @@ def sf_shadernode_node_group():
 
     #node Group Input.002
     group_input_002 = sf_shadernode.nodes.new("NodeGroupInput")
+
+    #node Group Input
+    group_input = sf_shadernode.nodes.new("NodeGroupInput")
+
+    #node Mix Shader
+    mix = sf_shadernode.nodes.new("ShaderNodeMix")
+
+    #node Invert
+    invert = sf_shadernode.nodes.new("ShaderNodeInvert")
+
+    #node Group Output
+    group_output = sf_shadernode.nodes.new("NodeGroupOutput")
 
 
     #Set locations
@@ -226,11 +211,11 @@ def sf_shadernode_node_group():
     #group_input_001.HEIGHT -> group_output.Displacement
     sf_shadernode.links.new(group_input_001.outputs[7], group_output.inputs[1])
     #group_input.COLOR -> mix.A
-    sf_shadernode.links.new(group_input.outputs[0], mix.inputs[6])
+    sf_shadernode.links.new(group_input.outputs[0], mix.inputs[1])
     #group_input.AO -> invert.Color
     sf_shadernode.links.new(group_input.outputs[5], invert.inputs[1])
     #invert.Color -> mix.B
-    sf_shadernode.links.new(invert.outputs[0], mix.inputs[7])
+    sf_shadernode.links.new(invert.outputs[0], mix.inputs[2])
     #group_input_001.COLOR -> principled_bsdf.Base Color
     sf_shadernode.links.new(group_input_001.outputs[0], principled_bsdf.inputs[0])
     #group_input_002.OPACITY -> math.Value
@@ -418,7 +403,6 @@ def new_mat(mat_name:str):
 
     mat.blend_method = 'HASHED'
     mat.use_backface_culling = True
-    mat.shadow_method = 'HASHED'
 
     return mat
 

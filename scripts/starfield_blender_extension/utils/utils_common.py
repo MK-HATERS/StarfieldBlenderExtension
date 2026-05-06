@@ -8,6 +8,12 @@ from functools import wraps
 from time import time
 
 import random
+import importlib
+import sys
+import subprocess
+import traceback
+import bpy
+import mathutils
 
 def _try_import(import_str, exception_str = None, silent = False, raise_exception = True):
 	try:
@@ -29,6 +35,104 @@ def _try_import(import_str, exception_str = None, silent = False, raise_exceptio
 			return False, f"{e}"
 	finally:
 		pass
+
+def get_modules_path() -> str:
+    """Return a writable directory inside Blender's user scripts dir to install modules into."""
+    try:
+        modules_path = bpy.utils.user_resource("SCRIPTS", path="modules", create=True)
+    except Exception:
+        # Fallback to a path inside the addon folder
+        modules_path = os.path.join(os.path.dirname(__file__), "modules")
+        os.makedirs(modules_path, exist_ok=True)
+    return modules_path
+
+
+def append_modules_to_sys_path(modules_path: str):
+    """Ensure the modules_path is discoverable by Python imports."""
+    if modules_path not in sys.path:
+        sys.path.append(modules_path)
+    try:
+        import site
+        site.addsitedir(modules_path)
+    except Exception:
+        pass
+
+
+def ensure_loop_normals(mesh: bpy.types.Mesh):
+	"""Ensure loop (split) normals are available on the mesh.
+	Uses native calc_normals_split when available, otherwise computes
+	per-loop normals from polygon normals and writes them to loops.
+	"""
+	# Prefer built-in API when present
+	if hasattr(mesh, 'calc_normals_split'):
+		try:
+			mesh.calc_normals_split()
+			return True
+		except Exception:
+			pass
+
+	# Fallback: compute per-loop normals from polygon normals
+	try:
+		normals = []
+		for poly in mesh.polygons:
+			n = poly.normal
+			for _ in poly.loop_indices:
+				normals.extend((n.x, n.y, n.z))
+
+		if len(normals) == 0:
+			return False
+
+		# Write into loop normals array
+		try:
+			mesh.loops.foreach_set('normal', normals)
+			return True
+		except Exception:
+			# As a last resort, try setting custom split normals from array
+			try:
+				# Convert to tuples per loop
+				import array
+				mesh.normals_split_custom_set_from_vertices([mathutils.Vector((0,0,1)) for _ in mesh.vertices])
+			except Exception:
+				return False
+	except Exception:
+		return False
+
+
+def ensure_package(package_name: str, modules_path: str | None = None) -> tuple[bool, str]:
+    """
+    Try importing the package; if missing, install into modules_path using Blender's python.
+    If modules_path is None, use get_modules_path(). Returns (success, message).
+    """
+    if modules_path is None:
+        modules_path = get_modules_path()
+
+    try:
+        importlib.import_module(package_name)
+        return True, ""
+    except Exception:
+        pass
+
+    python = sys.executable
+    install_cmd = [python, '-m', 'pip', 'install', '--upgrade', '--target', modules_path, package_name]
+
+    try:
+        # Ensure pip and wheel are up-to-date for the interpreter
+        subprocess.check_call([python, '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools', 'wheel'])
+        # Install into the target modules_path
+        subprocess.check_call(install_cmd)
+    except subprocess.CalledProcessError as e:
+        return False, f"pip install failed: {e}"
+    except Exception:
+        return False, f"Unexpected error while installing {package_name}: {traceback.format_exc()}"
+
+    # Add modules_path to sys.path and try importing again
+    try:
+        append_modules_to_sys_path(modules_path)
+        importlib.invalidate_caches()
+        importlib.import_module(package_name)
+        return True, ""
+    except Exception as e:
+        return False, f"Installed but failed to import {package_name}: {e}"
 
 def __prop_wrapper(prop_func, *args, **kwargs):
 	def _wrapper_inner(**kwargs_inner):

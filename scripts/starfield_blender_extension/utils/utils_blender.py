@@ -494,7 +494,7 @@ def PreprocessAndProxy(old_obj, use_world_origin, convert_to_mesh = True, do_tri
 	bpy.ops.object.select_all(action='DESELECT')
 	selected_obj.select_set(True)
 
-	bpy.ops.object.shade_smooth(use_auto_smooth=True)
+	bpy.ops.object.shade_smooth()
 
 	if auto_add_sharp:
 		modifier2 = selected_obj.modifiers.new(name = selected_obj.name, type='DATA_TRANSFER')
@@ -630,7 +630,8 @@ def CalcVIdLIdlist(mesh):
 
 def GetNormalTangents(mesh, with_tangent = True, fast_mode = False, fast_mode_list = None):
 	if fast_mode and fast_mode_list != None:
-		mesh.calc_normals_split()
+		# Ensure loop normals exist (compatibility wrapper)
+		utils.ensure_loop_normals(mesh)
 		if with_tangent:
 			mesh.calc_tangents()		
 			Normals = [np.array(mesh.loops[loop_idx].normal) for loop_idx in fast_mode_list]
@@ -644,7 +645,8 @@ def GetNormalTangents(mesh, with_tangent = True, fast_mode = False, fast_mode_li
 	else:
 		verts_count = len(mesh.vertices)
 		Normals = [np.array([0,0,0]) for i in range(verts_count)]
-		mesh.calc_normals_split()
+		# Ensure loop normals exist (compatibility wrapper)
+		utils.ensure_loop_normals(mesh)
 		if with_tangent:
 			Bitangent_sign = [1 for i in range(verts_count)]
 			Tangents = [np.array([0,0,0]) for i in range(verts_count)]

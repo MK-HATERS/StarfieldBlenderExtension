@@ -215,7 +215,8 @@ def _morph_normals_from_mesh_data(attr:bpy.types.Attribute, shapekey_name:str, m
 
 	raw_normals = np.empty((len(mesh.loops) * data_size), dtype=np_type)
 
-	mesh.calc_normals_split()
+	# Ensure loop normals are computed (compatibility wrapper)
+	utils.ensure_loop_normals(mesh)
 
 	mesh.loops.foreach_get('normal', raw_normals.ravel())
 

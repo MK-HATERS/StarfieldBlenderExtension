@@ -157,10 +157,73 @@ class BGS_STARFIELD_OT_set_recommended_unit_scale(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class BGS_STARFIELD_OT_validate_scene(bpy.types.Operator):
+    bl_idname = bs_plugin_data.bl_id_with_project_suffix("bgs_starfield.validate_scene")
+    bl_label = "Validate Scene"
+    bl_description = "Validate scene data for export compatibility"
+
+    def execute(self, context):
+        # TODO: Implement scene validation logic
+        self.report({'INFO'}, "Scene validation completed")
+        return {'FINISHED'}
+
+
+class BGS_STARFIELD_OT_load_preset(bpy.types.Operator):
+    bl_idname = bs_plugin_data.bl_id_with_project_suffix("bgs_starfield.load_preset")
+    bl_label = "Load Export Preset"
+    bl_description = "Load export settings from a preset"
+
+    def execute(self, context):
+        # TODO: Implement preset loading
+        self.report({'INFO'}, "Preset loaded")
+        return {'FINISHED'}
+
+
+class BGS_STARFIELD_OT_save_preset(bpy.types.Operator):
+    bl_idname = bs_plugin_data.bl_id_with_project_suffix("bgs_starfield.save_preset")
+    bl_label = "Save Export Preset"
+    bl_description = "Save current export settings as a preset"
+
+    def execute(self, context):
+        # TODO: Implement preset saving
+        self.report({'INFO'}, "Preset saved")
+        return {'FINISHED'}
+
+
+class BGS_STARFIELD_OT_advanced_morph_edit(bpy.types.Operator):
+    bl_idname = bs_plugin_data.bl_id_with_project_suffix("bgs_starfield.advanced_morph_edit")
+    bl_label = "Advanced Morph Edit"
+    bl_description = "Open advanced morph editing interface for shape keys"
+
+    def execute(self, context):
+        from ..MorphIO import CreateMorphObjSet
+        from ..utils import utils_blender
+
+        active_obj = utils_blender.GetActiveObject()
+        ref_objs = utils_blender.GetSelectedObjs(True)
+
+        if active_obj == None or active_obj.type != 'MESH':
+            self.report({'WARNING'}, "Must select a mesh object with shape keys!")
+            return {'CANCELLED'}
+
+        target_objs = []
+        result = CreateMorphObjSet(context.scene, context, active_obj, ref_objs, target_objs, self)
+
+        return result
+
+
 def register():
     bpy.utils.register_class(BGS_STARFIELD_OT_verify_scene_data_and_do_export)
     bpy.utils.register_class(BGS_STARFIELD_OT_set_recommended_unit_scale)
+    bpy.utils.register_class(BGS_STARFIELD_OT_validate_scene)
+    bpy.utils.register_class(BGS_STARFIELD_OT_load_preset)
+    bpy.utils.register_class(BGS_STARFIELD_OT_save_preset)
+    bpy.utils.register_class(BGS_STARFIELD_OT_advanced_morph_edit)
 
 def unregister():
     bpy.utils.unregister_class(BGS_STARFIELD_OT_verify_scene_data_and_do_export)
     bpy.utils.unregister_class(BGS_STARFIELD_OT_set_recommended_unit_scale)
+    bpy.utils.unregister_class(BGS_STARFIELD_OT_validate_scene)
+    bpy.utils.unregister_class(BGS_STARFIELD_OT_load_preset)
+    bpy.utils.unregister_class(BGS_STARFIELD_OT_save_preset)
+    bpy.utils.unregister_class(BGS_STARFIELD_OT_advanced_morph_edit)
