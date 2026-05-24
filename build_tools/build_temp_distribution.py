@@ -18,6 +18,13 @@ SOURCE_PHYSICS = ROOT / "scripts" / "tool_physics_editor"
 SOURCE_PROFILER = ROOT / "profiler"
 OUTPUT = ROOT / "temp_check_dist" / "starfield_blender_extension"
 
+BLENDER_ADDONS = (
+    Path.home()
+    / "AppData" / "Roaming" / "Blender Foundation" / "Blender"
+    / "5.1" / "scripts" / "addons"
+    / "starfield_blender_extension"
+)
+
 PHYSICS_DATA_FILES = (
     ROOT / "physics_data.bin",
     ROOT / "physics_data_debug.bin",
@@ -163,6 +170,57 @@ def validate_distribution(compile_check: bool) -> None:
     log("Validation passed")
 
 
+def deploy_to_blender() -> None:
+    ensure_exists(OUTPUT, "temp_check_dist (run 'build' first)")
+    if not BLENDER_ADDONS.parent.exists():
+        raise FileNotFoundError(
+            f"Blender addons folder not found: {BLENDER_ADDONS.parent}\n"
+            "Check that Blender 5.1 is installed."
+        )
+    log(f"Deploying to Blender addons: {BLENDER_ADDONS}")
+    if BLENDER_ADDONS.exists():
+        shutil.rmtree(BLENDER_ADDONS, onerror=_remove_readonly)
+    shutil.copytree(OUTPUT, BLENDER_ADDONS, ignore=IGNORE_PATTERNS)
+    log("Deploy complete - restart Blender or reload the addon to apply changes")
+
+
+def quick_deploy_python() -> None:
+    """Copy only Python source files into the already-installed Blender addon.
+
+    Use this when ReleaseTemplate is not available locally.  The DLLs, assets,
+    and other binary files that are already in the Blender addon folder are left
+    untouched — only .py files are updated.
+    """
+    if not BLENDER_ADDONS.exists():
+        raise FileNotFoundError(
+            f"Addon not found in Blender: {BLENDER_ADDONS}\n"
+            "Install the full addon in Blender first, then use quick-deploy for updates."
+        )
+
+    python_sources = [
+        (SOURCE_MAIN,    BLENDER_ADDONS),
+        (SOURCE_BATCH,   BLENDER_ADDONS / "tool_batch_process"),
+        (SOURCE_PHYSICS, BLENDER_ADDONS / "tool_physics_editor"),
+    ]
+
+    for src, dst in python_sources:
+        ensure_exists(src, f"source directory {src}")
+        log(f"Syncing Python: {src.name} -> {dst}")
+        for py_file in src.rglob("*.py"):
+            if "__pycache__" in py_file.parts:
+                continue
+            rel = py_file.relative_to(src)
+            target = dst / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(py_file, target)
+
+    # Clear stale __pycache__ so Blender picks up the new .py files
+    for cache_dir in BLENDER_ADDONS.rglob("__pycache__"):
+        shutil.rmtree(cache_dir, onerror=_remove_readonly)
+
+    log("Quick deploy complete - reload the addon in Blender to apply changes")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build and validate temp_check_dist/starfield_blender_extension"
@@ -183,6 +241,20 @@ def parse_args() -> argparse.Namespace:
         help="Run recursive py_compile validation",
     )
 
+    deploy_parser = subparsers.add_parser(
+        "deploy", help="Build and deploy directly to Blender 5.1 addons folder"
+    )
+    deploy_parser.add_argument(
+        "--compile",
+        action="store_true",
+        help="Run recursive py_compile validation before deploying",
+    )
+
+    subparsers.add_parser(
+        "quick-deploy",
+        help="Copy only Python source files into the installed Blender addon (no ReleaseTemplate needed)",
+    )
+
     return parser.parse_args()
 
 
@@ -197,6 +269,14 @@ def main() -> int:
         elif args.command == "validate":
             validate_distribution(compile_check=args.compile)
             log("Validation completed successfully")
+        elif args.command == "deploy":
+            build_distribution()
+            validate_distribution(compile_check=args.compile)
+            deploy_to_blender()
+            log("Deploy completed successfully")
+        elif args.command == "quick-deploy":
+            quick_deploy_python()
+            log("Quick deploy completed successfully")
         else:  # pragma: no cover - argparse guards this
             raise RuntimeError(f"Unsupported command: {args.command}")
     except Exception as exc:  # pragma: no cover - CLI helper

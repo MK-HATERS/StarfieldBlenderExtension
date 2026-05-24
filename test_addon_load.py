@@ -3,7 +3,7 @@ import sys
 import os
 
 # Add the addon path
-addon_path = r"C:\Users\Anthony\OneDrive\Modding\StarfieldBlenderExtension\temp_check_dist\starfield_blender_extension"
+addon_path = r"G:\GithubWork\StarfieldBlenderExtension\temp_check_dist\starfield_blender_extension"
 if addon_path not in sys.path:
     sys.path.insert(0, addon_path)
 

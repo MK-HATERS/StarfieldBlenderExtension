@@ -93,7 +93,7 @@ def unregister_custom():
 
 
 def register():
-    bpy.utils.register_class(BGS_STARFIELD_PT_vertex_groups)
+    pass  # No standalone panel — BGS content is injected into DATA_PT_vertex_groups via register_custom()
 
 def unregister():
-    bpy.utils.unregister_class(BGS_STARFIELD_PT_vertex_groups)
+    pass

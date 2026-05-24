@@ -475,4 +475,5 @@ def unregister():
 		bpy.utils.unregister_class(c)
 	
 	for attr in __scene_global_attrs__:
-		delattr(bpy.types.Scene, attr)
+		if hasattr(bpy.types.Scene, attr):
+			delattr(bpy.types.Scene, attr)

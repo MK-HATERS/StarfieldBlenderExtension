@@ -113,8 +113,8 @@ class ImportCustomNif(bpy.types.Operator, ImportHelper):
 	)
 	max_lod: bpy.props.IntProperty(
 		name="Max Lod",
-		description="Maximum Loaded LoD, 0 for loading all LoDs.",
-		default=1,
+		description="Number of LoD levels to load. 0 = all LoDs, 1 = LOD0 only, 2 = LOD0+LOD1, etc.",
+		default=0,
 	)
 	skeleton_name: bpy.props.EnumProperty(
 		name="Skeleton Template",

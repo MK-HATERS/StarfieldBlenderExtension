@@ -9,6 +9,20 @@ from .types import nif_armature, nif_template
 
 skeleton_obj_dict = {}
 
+# Progress state updated during import so the header bar shows activity
+_nif_progress = {'current': 0, 'total': 1}
+
+def _count_geo_lods(node, root_dict):
+    """Count total mesh LOD loads for progress reporting."""
+    count = 0
+    if node.get("geometry_index", 4294967295) != 4294967295:
+        data = root_dict["geometries"][node["geometry_index"]]
+        count += len(data.get("geo_mesh_lod", []))
+    for child in node.get("children", []):
+        count += _count_geo_lods(child, root_dict)
+    return count
+
+
 def ResetSkeletonObjDict():
 	skeleton_obj_dict.clear()
 
@@ -68,6 +82,8 @@ def TraverseNodeRecursive(armature_dict:dict, parent_node, collection, root_dict
 				utils_blender.SetBSGeometryName(_objects[-1], geo_name + f'_lod{lod}')
 			imported_obj.data.materials.append(material)
 			loaded = True
+			_nif_progress['current'] += 1
+			context.window_manager.progress_update(_nif_progress['current'])
 		
 		if options.geo_bounding_debug:
 			bound_sphere = data["geo_bounding_sphere"]
@@ -258,7 +274,11 @@ def ImportNif(file_path, options, context, operator):
 		operator.report({'INFO'}, f'Nif has no geometry. Loaded as Armature.')
 		return {'FINISHED'}, None, None
 	else:
+		_nif_progress['current'] = 0
+		_nif_progress['total'] = max(_count_geo_lods(_data, _data), 1)
+		context.window_manager.progress_begin(0, _nif_progress['total'])
 		root_objs = TraverseNodeRecursive(_data, None, prev_coll, _data, options, additional_assets_folders, context, operator, nifname + ' ' + nif_folder_name, connect_pts)
+		context.window_manager.progress_end()
 		root_objs[0]['Import_Nif_Path'] = file_path
 
 

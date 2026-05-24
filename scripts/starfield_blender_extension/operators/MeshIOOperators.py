@@ -226,11 +226,43 @@ class ImportCustomMesh(bpy.types.Operator):
 		default=False
 	)
 
+	attach_to_active_nif: bpy.props.BoolProperty(
+		name="Attach to Active NIF Node",
+		description="Parent the imported mesh to the currently selected NIF empty and move it into the NIF collection. Select a NIF root or node before importing.",
+		default=False,
+	)
+
 	def execute(self, context):
-		return MeshIO.ImportMesh_Alt(self.filepath, self, context, self)
+		# Capture the potential NIF parent before the import changes selection
+		nif_parent = None
+		nif_collection = None
+		if self.attach_to_active_nif:
+			act = context.active_object
+			if act and act.type == 'EMPTY':
+				nif_parent = act
+				if act.users_collection:
+					nif_collection = act.users_collection[0]
+
+		rtn = MeshIO.ImportMesh_Alt(self.filepath, self, context, self)
+
+		if 'FINISHED' in rtn and nif_parent is not None:
+			imported = context.active_object
+			if imported and imported != nif_parent:
+				imported.parent = nif_parent
+				if nif_collection is not None:
+					for coll in list(imported.users_collection):
+						if coll != nif_collection:
+							coll.objects.unlink(imported)
+					if imported.name not in nif_collection.objects:
+						nif_collection.objects.link(imported)
+
+		return rtn
 
 	def invoke(self, context, event):
 		self.assets_folder = context.scene.assets_folder
+		# Auto-suggest attach if a NIF empty node is active
+		act = context.active_object
+		self.attach_to_active_nif = bool(act and act.type == 'EMPTY' and act.users_collection)
 		context.window_manager.fileselect_add(self)
 		return {'RUNNING_MODAL'}
 
@@ -238,6 +270,8 @@ class ImportCustomMesh(bpy.types.Operator):
 		layout = self.layout
 		layout.label(text="Assets Folder:")
 		layout.prop(self, "assets_folder", text="")
+		layout.separator()
+		layout.prop(self, "attach_to_active_nif")
 
 __classes__ = [
 	ExportCustomMesh,

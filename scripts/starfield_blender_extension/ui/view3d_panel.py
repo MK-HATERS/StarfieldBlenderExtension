@@ -238,17 +238,20 @@ class VIEW3D_PT_bgs_starfield(bpy.types.Panel):
 
         layout.label(text="BGS Blender Tools (Starfield)")
 
-        row = layout.row(align=True)
-        row.prop(
-            context.scene, "bgs_starfield_active_tab", expand=True)
+        active_tab = getattr(context.scene, 'bgs_starfield_active_tab', 'object')
 
-        if context.scene.bgs_starfield_active_tab == 'object':
+        if hasattr(context.scene, 'bgs_starfield_active_tab'):
+            row = layout.row(align=True)
+            row.prop(
+                context.scene, "bgs_starfield_active_tab", expand=True)
+
+        if active_tab == 'object':
             VIEW3D_PT_bgs_starfield_general.draw(self, context)
-        elif context.scene.bgs_starfield_active_tab == 'collision':
+        elif active_tab == 'collision':
             VIEW3D_PT_bgs_starfield_collision.draw(self, context)
-        elif context.scene.bgs_starfield_active_tab == 'animation':
+        elif active_tab == 'animation':
             VIEW3D_PT_bgs_starfield_animation.draw(self, context)
-        elif context.scene.bgs_starfield_active_tab == 'export':
+        elif active_tab == 'export':
             if context.mode != 'OBJECT':
                 layout.label(text="Exit Edit Mode to change settings")
                 return

@@ -269,63 +269,66 @@ def MeshFromJson(json_data, options, context, operator, mesh_name_override = Non
 	mesh:bpy.types.Mesh = obj.data
 	if mesh_name_override != None:
 		mesh.name = mesh_name_override
-	if not mesh.vertex_colors:
-		mesh.vertex_colors.new()
+	# ---------------------------------------------------------------
+	# Pre-compute per-loop vertex indices once (shared by UV2 + VCol)
+	# ---------------------------------------------------------------
+	num_loops = len(mesh.loops)
+	loop_vert_idx = np.empty(num_loops, dtype=np.int32)
+	mesh.loops.foreach_get('vertex_index', loop_vert_idx)
 
-	bm = bmesh.new()
-	bm.from_mesh(mesh)
-
-	col = obj.data.vertex_colors.active
-
+	# UV2 - foreach_set replaces O(loops) per-element Python calls
 	if "uv_coords2" in data:
 		if len(data["uv_coords2"]) != len(mesh.vertices):
 			operator.report({'WARNING'}, f"UV2 data mismatched. Contact the author for assistance.")
 			return {'CANCELLED'}
+		uv2 = np.array(data["uv_coords2"], dtype=np.float32)[loop_vert_idx]
+		uv2[:, 1] = 1.0 - uv2[:, 1]  # flip Y
 		uv_layer2 = obj.data.uv_layers.new(name="UV2")
-		for f in bm.faces:
-			for vert_idx, loop_idx in zip(f.verts, f.loops):
-				uv_coords = data["uv_coords2"][vert_idx.index]
-				uv_layer2.data[loop_idx.index].uv = (uv_coords[0],1 - uv_coords[1])
+		uv_layer2.data.foreach_set("uv", uv2.ravel())
 
+	# Vertex weights - BMesh deform layer replaces O(V*bones) vertex_group.add() calls
 	if len(data["vertex_weights"]) > 0:
-		if len(bm.verts) != len(data["vertex_weights"]):
+		if len(data["vertex_weights"]) != len(mesh.vertices):
 			operator.report({'WARNING'}, f"Weight data mismatched. Contact the author for assistance.")
 			return {'CANCELLED'}
-		
-		num_bones_per_vert = len(data["vertex_weights"][0])
-		num_bones = -1
-		for v in bm.verts:
-			for i in range(num_bones_per_vert):
-				if data["vertex_weights"][v.index][i][0] > num_bones:
-					num_bones = data["vertex_weights"][v.index][i][0]
-		
-		num_bones += 1
-		bones = []
+
+		weights_np  = np.array(data["vertex_weights"], dtype=np.float32)  # (V, slots, 2)
+		bone_idx_np = weights_np[:, :, 0].astype(np.int32)
+		bone_wt_np  = weights_np[:, :, 1]
+		num_bones   = int(bone_idx_np.max()) + 1
+		num_slots   = weights_np.shape[1]
+
 		for i in range(num_bones):
-			bones.append(obj.vertex_groups.new(name='bone' + str(i)))
+			obj.vertex_groups.new(name='bone' + str(i))
 
-		for v in bm.verts:
-			for i in range(num_bones_per_vert):
-				cur_boneweight = data["vertex_weights"][v.index][i]
-				
-				if cur_boneweight[1] != 0:
-					bones[int(cur_boneweight[0])].add([v.index], cur_boneweight[1],'ADD')
-			#print(v.index, v.co, data["vertex_weights"][v.index])
+		bm = bmesh.new()
+		bm.from_mesh(mesh)
+		deform = bm.verts.layers.deform.verify()
+		for v_i, v in enumerate(bm.verts):
+			d = v[deform]
+			for s in range(num_slots):
+				w = float(bone_wt_np[v_i, s])
+				if w > 0.0:
+					d[int(bone_idx_np[v_i, s])] = w
+		bm.to_mesh(mesh)
+	else:
+		bm = bmesh.new()
+		bm.from_mesh(mesh)
 
-	vertex_map = defaultdict(list)
-	for poly in obj.data.polygons:
-		for v_ix, l_ix in zip(poly.vertices, poly.loop_indices):
-			vertex_map[v_ix].append(l_ix)
-
+	# Vertex colors — use color_attributes (Blender 5.x; mesh.vertex_colors is deprecated
+	# and crashes with bad_variant_access on foreach_set in Blender 5.1+).
 	if len(data["vertex_color"]) > 0:
-		if len(bm.verts) != len(data["vertex_color"]):
+		if len(data["vertex_color"]) != len(mesh.vertices):
 			operator.report({'WARNING'}, f"Vertex data mismatched. Contact the author for assistance.")
+			bm.free()
 			return {'CANCELLED'}
-		for v_ix, l_ixs in vertex_map.items():
-			for l_ix in l_ixs:
-				col.data[l_ix].color = (data["vertex_color"][v_ix][0],data["vertex_color"][v_ix][1],data["vertex_color"][v_ix][2],data["vertex_color"][v_ix][3])
-	
-		
+		# Ensure a CORNER-domain BYTE_COLOR attribute exists
+		col_attr = mesh.color_attributes.active_color
+		if col_attr is None:
+			col_attr = mesh.color_attributes.new(name="Col", type='BYTE_COLOR', domain='CORNER')
+		vc = np.array(data["vertex_color"], dtype=np.float32)[loop_vert_idx]
+		col_attr.data.foreach_set("color", vc.ravel())
+
 	if options.meshlets_debug and len(data['meshlets']) > 0:
 		num_meshlets = len(data['meshlets'])
 
@@ -404,6 +407,11 @@ def MeshFromJson(json_data, options, context, operator, mesh_name_override = Non
 		if num_tangents != len(bm.verts):
 			operator.report({'WARNING'}, f"Tangent data mismatched.")
 		else:
+			# Build vertex_map from original mesh before reassigning mesh/obj
+			vertex_map = defaultdict(list)
+			for poly in mesh.polygons:
+				for v_ix, l_ix in zip(poly.vertices, poly.loop_indices):
+					vertex_map[v_ix].append(l_ix)
 			mesh = bpy.data.meshes.new("Tangents")  # add a new mesh
 			obj = bpy.data.objects.new("Tangents", mesh)  # add a new object using the mesh
 

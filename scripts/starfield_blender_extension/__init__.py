@@ -20,12 +20,12 @@ from . import tool_havokphysics
 
 bl_info = {
 	"name": "Starfield Blender Extension",
-	"author": "SesamePaste, Deveris, and Bethesda Game Studios",
+	"author": "SesamePaste, Deveris, Bethesda Game Studios, and MkHaters",
 	"version": (1, 6, 0),
 	"blender": (5, 0, 0),
 	"location": "Sidebar > BGS Starfield Tools",
 	"description": "Comprehensive suite of tools for authoring Starfield art content including mesh conversion, physics, materials, collisions, and export.",
-	"warning": "",
+	"warning": "Beta",
 	"category": "BGS Starfield",
 }
 
@@ -129,12 +129,7 @@ __scene_global_attrs__ = {
 		],
 		default='male'
 	),
-	"br_driven_armature": utils.__prop_wrapper(
-		bpy.props.PointerProperty,
-		name="Driven Armature",
-		type=bpy.types.Object,
-		poll=lambda self, obj: obj.type == 'ARMATURE'
-	),
+	# br_driven_armature is owned by BoneRegionsPanel.__scene_global_attrs__ — not duplicated here.
 }
 
 __modules__ = [
@@ -184,14 +179,16 @@ def register():
 	# StarfieldArtTools preferences are unified in Preferences.SGBPreferences.
 
 def unregister():
-
-	for attr in __scene_global_attrs__:
-		delattr(bpy.types.Scene, attr)
-
+	# Unregister modules first so they can clean up their own scene attrs
+	# before we delete the global ones (avoids double-deletion errors).
 	for module in __modules__:
 		if hasattr(module, 'unregister'):
 			module.unregister()
-	
+
+	for attr in __scene_global_attrs__:
+		if hasattr(bpy.types.Scene, attr):
+			delattr(bpy.types.Scene, attr)
+
 	# StarfieldArtTools preferences are unified in Preferences.SGBPreferences.
 
 if __name__ == "__main__":

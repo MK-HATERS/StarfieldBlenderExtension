@@ -66,9 +66,7 @@ class TransferShapeKeys(bpy.types.Operator):
             "",
             self, "shape_key_list",
             self, "shape_key_list_index",
-			type='GRID',
-			rows=1,
-			columns=4
+			rows=4,
 		)
 
 	def execute(self, context):
@@ -77,7 +75,7 @@ class TransferShapeKeys(bpy.types.Operator):
 			self.report({'ERROR'}, _rtn_str)
 			return {'CANCELLED'}
 		
-		import utils_transfer as transfer
+		from ..utils import utils_transfer as transfer
 		reference = context.object
 		target_list = [o for o in utils_blender.GetSelectedObjs(True) if o.type == "MESH"]
 
